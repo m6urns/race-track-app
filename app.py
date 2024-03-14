@@ -14,7 +14,7 @@ server = app.server
 
 # Define the app layout
 app.layout = html.Div([
-    html.H1('Race Track Visualization'),
+    html.H1('🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁'),
     html.Div([
         html.Div([
             html.Label('Select Track'),
