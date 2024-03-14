@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px  # Import plotly.express for color scales
+import plotly.express as px
 
 # Create the Dash app
 app = dash.Dash(__name__)
@@ -129,30 +129,22 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
         smoothed_speed = speeds[-1] * (1 - smoothing_factor) + new_speed * smoothing_factor
         
         speeds.append(smoothed_speed)
-
-    # Decelerate to a stop at the end of the track
-    deceleration = -10 * acceleration_modifier
-    while speeds[-1] > 0:
-        new_speed = speeds[-1] + deceleration
-        new_speed = max(new_speed, 0)
-        speeds.append(new_speed)
-    
+        
     fig = go.Figure()
-    
+
     # Plot the track boundaries
-    fig.add_trace(go.Scatter(x=x_right, y=y_right, mode='lines', line=dict(color='black', width=2)))
-    fig.add_trace(go.Scatter(x=x_left, y=y_left, mode='lines', line=dict(color='black', width=2)))
-    
+    fig.add_trace(go.Scatter(x=x_right, y=y_right, mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter(x=x_left, y=y_left, mode='lines', line=dict(color='black', width=2), showlegend=False))
+
     # Plot the center line with speed colors
-    fig.add_trace(go.Scatter(x=x_center, y=y_center, mode='markers', marker=dict(color=speeds, colorscale=colormap, size=5)))
-    
+    fig.add_trace(go.Scatter(x=x_center, y=y_center, mode='markers', marker=dict(color=speeds, colorscale=colormap, size=5, colorbar=dict(title='Speed (km/h)')), showlegend=False))
+
     fig.update_layout(title=f'Track: {selected_track}',
-                      xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                      yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                      hovermode='closest',
-                      coloraxis=dict(colorbar=dict(title='Speed (km/h)')),
-                      height=600,
-                      width=800)
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    hovermode='closest',
+                    height=600,
+                    width=800)
     
     return fig
 
