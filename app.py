@@ -58,6 +58,17 @@ app.layout = html.Div([
                               {'label': 'Velocity', 'value': 'velocity'}],
                      value='velocity')
     ], style={'width': '300px', 'margin-bottom': '20px'}),
+    html.Div([
+        html.Label('Distance Range (m)'),
+        dcc.RangeSlider(
+            id='distance-range-slider',
+            min=0,
+            max=1,
+            step=0.01,
+            value=[0, 1],
+            marks={i/10: f'{i/10:.1f}' for i in range(0, 11)}
+        )
+    ], style={'width': '600px', 'margin-bottom': '20px'}),
     dcc.Graph(id='track-graph')
 ])
 
@@ -83,8 +94,9 @@ def update_track_dropdown(selected_track):
                Input('smoothing-slider', 'value'),
                Input('acceleration-slider', 'value'),
                Input('colormap-dropdown', 'value'),
-               Input('visualization-dropdown', 'value')])
-def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier, colormap, visualization_type):
+               Input('visualization-dropdown', 'value'),
+               Input('distance-range-slider', 'value')])
+def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier, colormap, visualization_type, distance_range):
     if selected_track is None:
         return go.Figure()
 
@@ -107,11 +119,17 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     # Calculate the distances between each pair of points
     distances = np.sqrt(np.diff(x_center)**2 + np.diff(y_center)**2)
 
+    # Calculate the cumulative distances along the track
+    cumulative_distances = np.concatenate(([0], np.cumsum(distances)))
+
+    # Normalize the cumulative distances to a range of 0 to 1
+    normalized_distances = cumulative_distances / cumulative_distances[-1]
+
     # Calculate the angles between each pair of points
     angles = np.arctan2(np.diff(y_center), np.diff(x_center))
 
     # Calculate the radius of curvature at each point
-    curvatures = np.abs(np.diff(angles) / distances[:-1])  # Adjust the length of distances
+    curvatures = np.abs(np.diff(angles) / distances[:-1])
 
     speeds = [0]  # Initial speed (starting from rest)
     accelerations = []
@@ -120,7 +138,7 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
 
     for i in range(len(distances)):
         distance = distances[i]
-        curvature = curvatures[i] if i < len(curvatures) else curvatures[-1]  # Handle the last point
+        curvature = curvatures[i] if i < len(curvatures) else curvatures[-1]
 
         # Adjust acceleration and deceleration based on track curvature and driver aggressiveness
         if curvature > 0.1:  # High curvature (sharp turn)
@@ -143,29 +161,49 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
         speeds.append(smoothed_speed)
 
         # Calculate acceleration and velocity
-        acceleration = (speeds[-1] - speeds[-2]) / distances[i] if i > 0 else acceleration
+        acceleration = (speeds[-1] - speeds[-2]) / distance if i > 0 else acceleration
         velocity = speeds[-1]
 
         accelerations.append(acceleration)
         velocities.append(velocity)
 
+    # Filter the track data based on the selected distance range
+    start_distance, end_distance = distance_range
+    filtered_indices = np.where((normalized_distances >= start_distance) & (normalized_distances <= end_distance))[0]
+
+    # Extract the filtered track data
+    x_center_filtered = x_center[filtered_indices]
+    y_center_filtered = y_center[filtered_indices]
+    w_tr_right_filtered = w_tr_right[filtered_indices]
+    w_tr_left_filtered = w_tr_left[filtered_indices]
+
+    # Calculate the track boundaries for the filtered data
+    x_right_filtered = x_center_filtered + w_tr_right_filtered
+    x_left_filtered = x_center_filtered - w_tr_left_filtered
+    y_right_filtered = y_center_filtered
+    y_left_filtered = y_center_filtered
+
+    # Extract the filtered acceleration and velocity data
+    accelerations_filtered = [accelerations[i] for i in filtered_indices[:-1]]
+    velocities_filtered = [velocities[i] for i in filtered_indices[:-1]]
+
     # Determine the appropriate colorbar title based on the selected visualization type
     colorbar_title = ''
     if visualization_type == 'acceleration':
         colorbar_title = 'Acceleration (m/s²)'
-        color_values = accelerations
+        color_values = accelerations_filtered
     elif visualization_type == 'velocity':
         colorbar_title = 'Velocity (km/h)'
-        color_values = velocities
+        color_values = velocities_filtered
 
     fig = go.Figure()
 
-    # Plot the track boundaries
-    fig.add_trace(go.Scatter(x=x_right, y=y_right, mode='lines', line=dict(color='black', width=2), showlegend=False))
-    fig.add_trace(go.Scatter(x=x_left, y=y_left, mode='lines', line=dict(color='black', width=2), showlegend=False))
+    # Plot the track boundaries for the selected distance range
+    fig.add_trace(go.Scatter(x=x_right_filtered, y=y_right_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter(x=x_left_filtered, y=y_left_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
 
-    # Plot the center line with the selected visualization type
-    fig.add_trace(go.Scatter(x=x_center, y=y_center, mode='markers', marker=dict(color=color_values, colorscale=colormap, size=5, colorbar=dict(title=colorbar_title)), showlegend=False))
+    # Plot the center line with the selected visualization type for the selected distance range
+    fig.add_trace(go.Scatter(x=x_center_filtered[:-1], y=y_center_filtered[:-1], mode='markers', marker=dict(color=color_values, colorscale=colormap, size=5, colorbar=dict(title=colorbar_title)), showlegend=False))
 
     fig.update_layout(title=f'Track: {selected_track}',
                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
