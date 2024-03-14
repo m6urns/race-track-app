@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
+import plotly.express as px  # Import plotly.express for color scales
 
 # Create the Dash app
 app = dash.Dash(__name__)
@@ -42,6 +43,12 @@ app.layout = html.Div([
         html.Label('Acceleration Modifier'),
         dcc.Slider(id='acceleration-slider', min=0.1, max=2, value=1, step=0.1)
     ], style={'width': '300px', 'margin-bottom': '20px'}),
+    html.Div([
+        html.Label('Color Map'),
+        dcc.Dropdown(id='colormap-dropdown', 
+                     options=[{'label': c, 'value': c} for c in px.colors.named_colorscales()],
+                     value='viridis')
+    ], style={'width': '300px', 'margin-bottom': '20px'}),
     dcc.Graph(id='track-graph')
 ])
 
@@ -65,8 +72,9 @@ def update_track_dropdown(selected_track):
                Input('max-speed-slider', 'value'),
                Input('aggressiveness-slider', 'value'),
                Input('smoothing-slider', 'value'),
-               Input('acceleration-slider', 'value')])
-def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier):
+               Input('acceleration-slider', 'value'),
+               Input('colormap-dropdown', 'value')])
+def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier, colormap):
     if selected_track is None:
         return go.Figure()
     
@@ -136,7 +144,7 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     fig.add_trace(go.Scatter(x=x_left, y=y_left, mode='lines', line=dict(color='black', width=2)))
     
     # Plot the center line with speed colors
-    fig.add_trace(go.Scatter(x=x_center, y=y_center, mode='markers', marker=dict(color=speeds, colorscale='Viridis', size=5)))
+    fig.add_trace(go.Scatter(x=x_center, y=y_center, mode='markers', marker=dict(color=speeds, colorscale=colormap, size=5)))
     
     fig.update_layout(title=f'Track: {selected_track}',
                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
