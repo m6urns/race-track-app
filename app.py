@@ -48,9 +48,16 @@ app.layout = html.Div([
         ], style={'width': '300px', 'display': 'inline-block'})
     ], style={'margin-bottom': '20px'}),
     html.Div([
-        html.Label('Acceleration Modifier'),
-        dcc.Slider(id='acceleration-slider', min=0.1, max=2, value=1, step=0.1)
-    ], style={'width': '300px', 'margin-bottom': '20px'}),
+        html.Div([
+            html.Label('Acceleration Modifier'),
+            dcc.Slider(id='acceleration-slider', min=0.1, max=2, value=1, step=0.1)
+        ], style={'width': '300px', 'margin-right': '20px', 'display': 'inline-block'}),
+        html.Div([
+            html.Label('Resolution'),
+            dcc.Slider(id='resolution-slider', min=1, max=10, value=1, step=1,
+                       marks={i: str(i) for i in range(1, 11)})
+        ], style={'width': '300px', 'display': 'inline-block'})
+    ], style={'margin-bottom': '20px'}),
     html.Div([
         html.Label('Visualization Type'),
         dcc.Dropdown(id='visualization-dropdown',
@@ -95,8 +102,10 @@ def update_track_dropdown(selected_track):
                Input('acceleration-slider', 'value'),
                Input('colormap-dropdown', 'value'),
                Input('visualization-dropdown', 'value'),
-               Input('distance-range-slider', 'value')])
-def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier, colormap, visualization_type, distance_range):
+               Input('distance-range-slider', 'value'),
+               Input('resolution-slider', 'value')])
+def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing_factor, acceleration_modifier,
+                 colormap, visualization_type, distance_range, resolution):
     if selected_track is None:
         return go.Figure()
 
@@ -187,14 +196,21 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     accelerations_filtered = [accelerations[i] for i in filtered_indices[:-1]]
     velocities_filtered = [velocities[i] for i in filtered_indices[:-1]]
 
+    # Apply resolution modifier
+    resolution_indices = np.arange(0, len(x_center_filtered[:-1]), resolution)
+    x_center_resolved = x_center_filtered[:-1][resolution_indices]
+    y_center_resolved = y_center_filtered[:-1][resolution_indices]
+    accelerations_resolved = [accelerations_filtered[i] for i in resolution_indices]
+    velocities_resolved = [velocities_filtered[i] for i in resolution_indices]
+
     # Determine the appropriate colorbar title based on the selected visualization type
     colorbar_title = ''
     if visualization_type == 'acceleration':
         colorbar_title = 'Acceleration (m/s²)'
-        color_values = accelerations_filtered
+        color_values = accelerations_resolved
     elif visualization_type == 'velocity':
         colorbar_title = 'Velocity (km/h)'
-        color_values = velocities_filtered
+        color_values = velocities_resolved
 
     fig = go.Figure()
 
@@ -202,8 +218,10 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     fig.add_trace(go.Scatter(x=x_right_filtered, y=y_right_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
     fig.add_trace(go.Scatter(x=x_left_filtered, y=y_left_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
 
-    # Plot the center line with the selected visualization type for the selected distance range
-    fig.add_trace(go.Scatter(x=x_center_filtered[:-1], y=y_center_filtered[:-1], mode='markers', marker=dict(color=color_values, colorscale=colormap, size=5, colorbar=dict(title=colorbar_title)), showlegend=False))
+    # Plot the center line with the selected visualization type and resolution
+    fig.add_trace(go.Scatter(x=x_center_resolved, y=y_center_resolved, mode='markers',
+                             marker=dict(color=color_values, colorscale=colormap, size=5,
+                                         colorbar=dict(title=colorbar_title)), showlegend=False))
 
     fig.update_layout(title=f'Track: {selected_track}',
                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
