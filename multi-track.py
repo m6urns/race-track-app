@@ -47,7 +47,7 @@ app.layout = html.Div([
               [Input('track-dropdown', 'value')])
 def update_track_dropdown(selected_track):
     # Get the list of track files from the folder
-    track_folder = '/home/matt/Projects/race-track/tracks'
+    track_folder = './tracks'
     track_files = [f for f in os.listdir(track_folder) if f.endswith('.csv')]
     
     # Create dropdown options
@@ -68,7 +68,7 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
         return go.Figure()
     
     # Read the selected track data from the CSV file
-    track_folder = '/home/matt/Projects/race-track/tracks'
+    track_folder = './tracks'
     track_data = np.genfromtxt(os.path.join(track_folder, selected_track), delimiter=',', skip_header=1)
     
     # Extract the center line coordinates and track widths
