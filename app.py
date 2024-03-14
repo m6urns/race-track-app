@@ -8,6 +8,9 @@ from dash.dependencies import Input, Output
 # Create the Dash app
 app = dash.Dash(__name__)
 
+# Expose the Flask server for Gunicorn to use
+server = app.server
+
 # Define the app layout
 app.layout = html.Div([
     html.H1('Race Track Visualization'),
