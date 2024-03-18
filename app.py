@@ -244,26 +244,35 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
                State('track-graph', 'figure')])
 def export_csv(n_clicks, selected_track, distance_range, figure):
     if n_clicks > 0:
-        # Extract the filtered track data and acceleration/velocity values
-        x_center_filtered = figure['data'][2]['x']
-        y_center_filtered = figure['data'][2]['y']
-        accelerations_filtered = figure['data'][2]['marker']['color']
-        velocities_filtered = [v * 3.6 for v in figure['data'][2]['marker']['color']]  # Convert m/s to km/h
+        if selected_track is None or figure is None or len(figure['data']) < 3:
+            print("Insufficient data for CSV export.")
+            return n_clicks
 
-        # Create a DataFrame with the exported data
-        export_data = pd.DataFrame({
-            'x': x_center_filtered,
-            'y': y_center_filtered,
-            'acceleration': accelerations_filtered,
-            'velocity': velocities_filtered
-        })
+        try:
+            # Extract the filtered track data and acceleration/velocity values
+            x_center_filtered = figure['data'][2]['x']
+            y_center_filtered = figure['data'][2]['y']
+            accelerations_filtered = figure['data'][2]['marker']['color']
+            velocities_filtered = [v * 3.6 for v in figure['data'][2]['marker']['color']]  # Convert m/s to km/h
 
-        # Generate the CSV file name
-        start_distance, end_distance = distance_range
-        csv_filename = f"{selected_track.split('.')[0]}_distance_{start_distance:.2f}_{end_distance:.2f}.csv"
+            # Create a DataFrame with the exported data
+            export_data = pd.DataFrame({
+                'x': x_center_filtered,
+                'y': y_center_filtered,
+                'acceleration': accelerations_filtered,
+                'velocity': velocities_filtered
+            })
 
-        # Save the DataFrame to a CSV file
-        export_data.to_csv(csv_filename, index=False)
+            # Generate the CSV file name
+            start_distance, end_distance = distance_range
+            csv_filename = f"{selected_track.split('.')[0]}_distance_{start_distance:.2f}_{end_distance:.2f}.csv"
+
+            # Save the DataFrame to a CSV file
+            export_data.to_csv(csv_filename, index=False)
+
+            print(f"CSV file '{csv_filename}' exported successfully.")
+        except Exception as e:
+            print(f"Error occurred during CSV export: {str(e)}")
 
     return n_clicks
 
