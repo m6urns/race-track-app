@@ -3,8 +3,9 @@ import numpy as np
 import plotly.graph_objects as go
 import dash
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
+import pandas as pd
 
 # Create the Dash app
 app = dash.Dash(__name__)
@@ -76,6 +77,9 @@ app.layout = html.Div([
             marks={i/10: f'{i/10:.1f}' for i in range(0, 11)}
         )
     ], style={'width': '600px', 'margin-bottom': '20px'}),
+    html.Div([
+        html.Button('Export CSV', id='export-button', n_clicks=0)
+    ], style={'margin-bottom': '20px'}),
     dcc.Graph(id='track-graph')
 ])
 
@@ -231,6 +235,37 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
                       width=800)
 
     return fig
+
+# Callback to handle CSV export
+@app.callback(Output('export-button', 'n_clicks'),
+              [Input('export-button', 'n_clicks')],
+              [State('track-dropdown', 'value'),
+               State('distance-range-slider', 'value'),
+               State('track-graph', 'figure')])
+def export_csv(n_clicks, selected_track, distance_range, figure):
+    if n_clicks > 0:
+        # Extract the filtered track data and acceleration/velocity values
+        x_center_filtered = figure['data'][2]['x']
+        y_center_filtered = figure['data'][2]['y']
+        accelerations_filtered = figure['data'][2]['marker']['color']
+        velocities_filtered = [v * 3.6 for v in figure['data'][2]['marker']['color']]  # Convert m/s to km/h
+
+        # Create a DataFrame with the exported data
+        export_data = pd.DataFrame({
+            'x': x_center_filtered,
+            'y': y_center_filtered,
+            'acceleration': accelerations_filtered,
+            'velocity': velocities_filtered
+        })
+
+        # Generate the CSV file name
+        start_distance, end_distance = distance_range
+        csv_filename = f"{selected_track.split('.')[0]}_distance_{start_distance:.2f}_{end_distance:.2f}.csv"
+
+        # Save the DataFrame to a CSV file
+        export_data.to_csv(csv_filename, index=False)
+
+    return n_clicks
 
 # Run the app
 if __name__ == '__main__':
