@@ -221,8 +221,8 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     fig = go.Figure()
 
     # Plot the track boundaries for the selected distance range
-    # fig.add_trace(go.Scatter(x=x_right_filtered, y=y_right_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
-    # fig.add_trace(go.Scatter(x=x_left_filtered, y=y_left_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter(x=x_right_filtered, y=y_right_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
+    fig.add_trace(go.Scatter(x=x_left_filtered, y=y_left_filtered, mode='lines', line=dict(color='black', width=2), showlegend=False))
 
     # Plot the center line with the selected visualization type and resolution
     fig.add_trace(go.Scatter(x=x_center_resolved, y=y_center_resolved, mode='markers',
