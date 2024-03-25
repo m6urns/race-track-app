@@ -6,6 +6,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
+import io
 
 # Create the Dash app
 app = dash.Dash(__name__)
@@ -78,7 +79,8 @@ app.layout = html.Div([
         )
     ], style={'width': '600px', 'margin-bottom': '20px'}),
     html.Div([
-        html.Button('Export CSV', id='export-button', n_clicks=0)
+        html.Button('Export CSV', id='export-button', n_clicks=0),
+        dcc.Download(id='download-csv')
     ], style={'margin-bottom': '20px'}),
     dcc.Graph(id='track-graph')
 ])
@@ -237,44 +239,49 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     return fig
 
 # Callback to handle CSV export
-@app.callback(Output('export-button', 'n_clicks'),
+@app.callback(Output('download-csv', 'data'),
               [Input('export-button', 'n_clicks')],
               [State('track-dropdown', 'value'),
                State('distance-range-slider', 'value'),
                State('track-graph', 'figure')])
 def export_csv(n_clicks, selected_track, distance_range, figure):
-    if n_clicks > 0:
-        if selected_track is None or figure is None or len(figure['data']) < 3:
-            print("Insufficient data for CSV export.")
-            return n_clicks
+    if n_clicks is None:
+        return None
 
-        try:
-            # Extract the filtered track data and acceleration/velocity values
-            x_center_filtered = figure['data'][2]['x']
-            y_center_filtered = figure['data'][2]['y']
-            accelerations_filtered = figure['data'][2]['marker']['color']
-            velocities_filtered = [v * 3.6 for v in figure['data'][2]['marker']['color']]  # Convert m/s to km/h
+    if selected_track is None or figure is None or len(figure['data']) < 3:
+        print("Insufficient data for CSV export.")
+        return None
 
-            # Create a DataFrame with the exported data
-            export_data = pd.DataFrame({
-                'x': x_center_filtered,
-                'y': y_center_filtered,
-                'acceleration': accelerations_filtered,
-                'velocity': velocities_filtered
-            })
+    try:
+        # Extract the filtered track data and acceleration/velocity values
+        x_center_filtered = figure['data'][2]['x']
+        y_center_filtered = figure['data'][2]['y']
+        accelerations_filtered = figure['data'][2]['marker']['color']
+        velocities_filtered = [v * 3.6 for v in figure['data'][2]['marker']['color']]  # Convert m/s to km/h
 
-            # Generate the CSV file name
-            start_distance, end_distance = distance_range
-            csv_filename = f"{selected_track.split('.')[0]}_distance_{start_distance:.2f}_{end_distance:.2f}.csv"
+        # Create a DataFrame with the exported data
+        export_data = pd.DataFrame({
+            'x': x_center_filtered,
+            'y': y_center_filtered,
+            'acceleration': accelerations_filtered,
+            'velocity': velocities_filtered
+        })
 
-            # Save the DataFrame to a CSV file
-            export_data.to_csv(csv_filename, index=False)
+        # Generate the CSV file name
+        start_distance, end_distance = distance_range
+        csv_filename = f"{selected_track.split('.')[0]}_distance_{start_distance:.2f}_{end_distance:.2f}.csv"
 
-            print(f"CSV file '{csv_filename}' exported successfully.")
-        except Exception as e:
-            print(f"Error occurred during CSV export: {str(e)}")
+        # Create a buffer to store the CSV data
+        buffer = io.StringIO()
+        export_data.to_csv(buffer, index=False)
+        buffer.seek(0)
 
-    return n_clicks
+        # Return the CSV data as a file download
+        return dict(content=buffer.getvalue(), filename=csv_filename)
+    except Exception as e:
+        print(f"Error occurred during CSV export: {str(e)}")
+
+    return None
 
 # Run the app
 if __name__ == '__main__':
