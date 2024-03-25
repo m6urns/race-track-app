@@ -227,7 +227,10 @@ def update_graph(selected_track, min_speed, max_speed, aggressiveness, smoothing
     # Plot the center line with the selected visualization type and resolution
     fig.add_trace(go.Scatter(x=x_center_resolved, y=y_center_resolved, mode='markers',
                              marker=dict(color=color_values, colorscale=colormap, size=5,
-                                         colorbar=dict(title=colorbar_title)), showlegend=False))
+                                         colorbar=dict(title=colorbar_title)),
+                             hovertemplate='Point: %{customdata[0]}<br>X: %{x:.3f}<br>Y: %{y:.3f}',
+                             customdata=np.stack((np.arange(len(x_center_resolved)), x_center_resolved, y_center_resolved), axis=-1),
+                             showlegend=False))
 
     fig.update_layout(title=f'Track: {selected_track}',
                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
