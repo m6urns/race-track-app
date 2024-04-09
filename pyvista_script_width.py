@@ -20,6 +20,9 @@ else:
 # Set a base radius for the tube
 base_radius = 5
 
+# Create a MultiBlock to hold all tube segments
+multi_block = pv.MultiBlock()
+
 # Iterate through each segment
 for i in range(len(x) - 1):
     # Define the start and end points of the segment
@@ -39,11 +42,20 @@ for i in range(len(x) - 1):
     # Create a tube for the segment
     tube = line.tube(radius=radius)
     
-    # Add the tube to the plotter
-    plotter.add_mesh(tube, color='blue')  # You can set the color or use a colormap
+    # Set the scalar values for the entire tube to the average acceleration
+    tube["acceleration"] = np.full(tube.n_points, segment_accel)  # Use n_points for point data
+
+    # Add the tube to the MultiBlock
+    multi_block.append(tube)
+
+# Combine all tube segments into a single mesh
+combined_mesh = multi_block.combine()
+
+# Add the combined mesh to the plotter, using the acceleration scalar for coloring
+plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='coolwarm', label='Race Track')
 
 # Add a scalar bar for the acceleration color map
-# plotter.add_scalar_bar(title='Acceleration', n_labels=5, position_x=0.85, position_y=0.05, width=0.1, height=0.5)
+plotter.add_scalar_bar(title='Acceleration', n_labels=5, position_x=0.85, position_y=0.05, width=0.1, height=0.5)
 
 # Set background color and show the plot
 plotter.set_background('white')
