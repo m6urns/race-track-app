@@ -2,7 +2,11 @@ import numpy as np
 import pyvista as pv
 
 # Read the CSV data
-data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/IMS_Straight.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/Austin_Straight.csv', delimiter=',', skip_header=1)
+data = np.genfromtxt('./tracks/IMS_UTurn.csv', delimiter=',', skip_header=1)
+
 x = data[:, 0]
 y = data[:, 1]
 acceleration = data[:, 2]
@@ -55,7 +59,7 @@ offset_distance = 50  # Adjust as needed
 arrow_start = np.array([x[0], y[0], 0]) + perpendicular * offset_distance
 
 # Create and add the arrow to the plotter
-arrow = pv.Arrow(start=arrow_start, direction=direction_norm, scale=100)  # Adjust scale as needed
+arrow = pv.Arrow(start=arrow_start, direction=direction_norm, scale=75)  # Adjust scale as needed
 plotter.add_mesh(arrow, color='red')
 
 # Set background color and show the plot
