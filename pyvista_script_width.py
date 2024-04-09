@@ -3,6 +3,9 @@ import pyvista as pv
 
 # Read the CSV data
 data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/IMS_UTurn', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/IMS_Straight.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/Austin_Straight.csv', delimiter=',', skip_header=1)
 x = data[:, 0]
 y = data[:, 1]
 acceleration = data[:, 2]
@@ -58,5 +61,5 @@ plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='coolwarm', label='
 plotter.add_scalar_bar(title='Acceleration', n_labels=5, position_x=0.85, position_y=0.05, width=0.1, height=0.5)
 
 # Set background color and show the plot
-plotter.set_background('white')
+plotter.set_background('grey')
 plotter.show()
