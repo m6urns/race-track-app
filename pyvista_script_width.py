@@ -2,10 +2,10 @@ import numpy as np
 import pyvista as pv
 
 # Read the CSV data
-# data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
 # data = np.genfromtxt('./tracks/IMS_Straight.csv', delimiter=',', skip_header=1)
 # data = np.genfromtxt('./tracks/Austin_Straight.csv', delimiter=',', skip_header=1)
-data = np.genfromtxt('./tracks/IMS_UTurn.csv', delimiter=',', skip_header=1)
+# data = np.genfromtxt('./tracks/IMS_UTurn.csv', delimiter=',', skip_header=1)
 
 x = data[:, 0]
 y = data[:, 1]
@@ -47,7 +47,13 @@ for i in range(len(x) - 1):
 combined_mesh = multi_block.combine()
 
 # Add the track mesh to the plotter
-plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='PuBu', label='Race Track')
+# plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='plasma', label='Race Track')
+# plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='YlGnBu', label='Race Track')
+plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='magma', label='Race Track')
+# plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='inferno', label='Race Track')
+
+# Color blind friendly color map
+# plotter.add_mesh(combined_mesh, scalars='acceleration', cmap='cividis', label='Race Track')
 
 # Calculate the direction vector for the arrow
 direction = np.array([x[1] - x[0], y[1] - y[0], 0])
