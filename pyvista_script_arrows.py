@@ -12,14 +12,14 @@ tangents = np.gradient(np.column_stack((x, y)), axis=0)
 tangents = tangents / np.linalg.norm(tangents, axis=1)[:, np.newaxis]
 
 # Define the threshold angle (in degrees)
-# threshold_angle = 12
-threshold_angle = 20
+threshold_angle = 12
+# threshold_angle = 170
 
 # Define the rotation angle for the arrows (in degrees)
 rotation_angle = 145
 
 # Define the maximum acceleration threshold
-max_acceleration_threshold = 197
+max_acceleration_threshold = 198
 
 # Create a plotter
 plotter = pv.Plotter()
