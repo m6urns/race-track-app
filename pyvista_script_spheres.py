@@ -21,7 +21,7 @@ poly.lines = cells
 plotter.add_mesh(poly, color='black', line_width=5, label='Race Track')
 
 # Create sphere glyphs with sizes based on acceleration magnitude
-sphere_size_factor = 0.01
+sphere_size_factor = 0.025
 sphere_sizes = acceleration * sphere_size_factor
 spheres = pv.PolyData(points)
 spheres.point_data['acceleration'] = acceleration
