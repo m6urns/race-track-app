@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 
 # Read the CSV data
-data = np.genfromtxt('./race-track-app/tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
 x = data[:, 0]
 y = data[:, 1]
 acceleration = data[:, 2]
@@ -21,12 +21,12 @@ poly.lines = cells
 plotter.add_mesh(poly, color='black', line_width=5, label='Race Track')
 
 # Create cube glyphs with orientation based on acceleration direction
-cube_size = 0.05
+cube_size = 0.00005
 acceleration_vectors = np.column_stack((np.zeros_like(acceleration), np.zeros_like(acceleration), acceleration))
 cubes = pv.PolyData(points)
 cubes.point_data['acceleration'] = acceleration
-glyphs = cubes.glyph(geom=pv.Cube(), orient=acceleration_vectors, scale=cube_size)
-
+cubes.point_data['orientation_vectors'] = acceleration_vectors  # Assign orientation vectors to point data
+glyphs = cubes.glyph(geom=pv.Cube(), orient='orientation_vectors', scale=cube_size)  # Reference the orientation by the name of the new data array
 # Add cube glyphs to the plotter
 plotter.add_mesh(glyphs, scalars='acceleration', cmap='coolwarm', label='Acceleration')
 
