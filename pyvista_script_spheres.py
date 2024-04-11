@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 
 # Read the CSV data
-data = np.genfromtxt('./race-track-app/tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
+data = np.genfromtxt('./tracks/Oschersleben_SCurve.csv', delimiter=',', skip_header=1)
 x = data[:, 0]
 y = data[:, 1]
 acceleration = data[:, 2]
@@ -25,8 +25,8 @@ sphere_size_factor = 0.01
 sphere_sizes = acceleration * sphere_size_factor
 spheres = pv.PolyData(points)
 spheres.point_data['acceleration'] = acceleration
-glyphs = spheres.glyph(geom=pv.Sphere(), scale=sphere_sizes)
-
+spheres.point_data['sphere_sizes'] = sphere_sizes  # Assign sphere sizes to point data
+glyphs = spheres.glyph(geom=pv.Sphere(), scale='sphere_sizes')  # Reference the scale by the name of the new data array
 # Add sphere glyphs to the plotter
 plotter.add_mesh(glyphs, scalars='acceleration', cmap='coolwarm', label='Acceleration')
 
