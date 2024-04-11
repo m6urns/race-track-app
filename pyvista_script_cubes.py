@@ -20,13 +20,19 @@ cells[:, 2] = np.arange(1, len(points), dtype=np.int_)
 poly.lines = cells
 plotter.add_mesh(poly, color='black', line_width=5, label='Race Track')
 
+# Normalize the acceleration values to a suitable range for cube sizes
+normalized_acceleration = (acceleration - acceleration.min()) / (acceleration.max() - acceleration.min())
+cube_size_factor = 10  # Adjust this factor to scale the overall size of the cubes
+scaled_cube_sizes = normalized_acceleration * cube_size_factor + 0.01  # Ensure there's a minimum size to avoid too small cubes
+
 # Create cube glyphs with orientation based on acceleration direction
-cube_size = 0.00005
 acceleration_vectors = np.column_stack((np.zeros_like(acceleration), np.zeros_like(acceleration), acceleration))
 cubes = pv.PolyData(points)
 cubes.point_data['acceleration'] = acceleration
+cubes.point_data['scaled_cube_sizes'] = scaled_cube_sizes  # Assign scaled cube sizes to point data
 cubes.point_data['orientation_vectors'] = acceleration_vectors  # Assign orientation vectors to point data
-glyphs = cubes.glyph(geom=pv.Cube(), orient='orientation_vectors', scale=cube_size)  # Reference the orientation by the name of the new data array
+glyphs = cubes.glyph(geom=pv.Cube(), orient='orientation_vectors', scale='scaled_cube_sizes')  # Use scaled sizes
+
 # Add cube glyphs to the plotter
 plotter.add_mesh(glyphs, scalars='acceleration', cmap='coolwarm', label='Acceleration')
 
